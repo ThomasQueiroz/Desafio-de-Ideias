@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Peça</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f4f4f4;
+            padding: 10px;
+        }
+
+        .back-button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 1000px;
+            padding: 20px;
+            margin: 20px auto; /* Centraliza o container */
+        }
+
+        .container h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"], 
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .form-group button {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .submit-button {
+            background-color: #28a745;
+        }
+
+        .submit-button:hover {
+            background-color: #218838;
+        }
+
+        .success-message {
+            color: green;
+            font-size: 18px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 18px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .image-preview {
+            max-width: 200px;
+            height: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <a href="index.html" class="back-button">Voltar para a Página Inicial</a>
+    </div>
+
+    <div class="container">
+        <h1>Editar Peça</h1>
+        <form id="edit-piece-form">
+            <div class="form-group">
+                <label for="codigo">Código:</label>
+                <input type="text" id="codigo" name="codigo" required>
+            </div>
+            <div class="form-group">
+                <label for="tamanho">Tamanho:</label>
+                <input type="text" id="tamanho" name="tamanho">
+            </div>
+            <div class="form-group">
+                <label for="material">Material:</label>
+                <input type="text" id="material" name="material">
+            </div>
+            <div class="form-group">
+                <label for="outras-informacoes">Outras Informações:</label>
+                <textarea id="outras-informacoes" name="outras-informacoes" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="foto-peca">Foto da Peça:</label>
+                <div id="foto-peca-preview" class="image-preview"></div>
+            </div>
+            <div class="form-group">
+                <label for="desenho-peca">Desenho da Peça:</label>
+                <div id="desenho-peca-preview" class="image-preview"></div>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="submit-button">Salvar Alterações</button>
+            </div>
+            <div id="message-container">
+                <!-- Mensagens de sucesso ou erro serão exibidas aqui -->
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const codigoPeca = urlParams.get('peca');
+
+            const maquinas = JSON.parse(localStorage.getItem('maquinas')) || [];
+            let peca = null;
+
+            for (const maquina of maquinas) {
+                peca = maquina.pecas.find(peca => peca.codigo === codigoPeca);
+                if (peca) break;
+            }
+
+            if (!peca) {
+                document.getElementById('message-container').innerHTML = '<p class="error-message">Peça não encontrada.</p>';
+                return;
+            }
+
+            // Carregar os dados da peça no formulário
+            document.getElementById('codigo').value = peca.codigo;
+            document.getElementById('tamanho').value = peca.tamanho;
+            document.getElementById('material').value = peca.material;
+            document.getElementById('outras-informacoes').value = peca.outraInformacao;
+
+            // Mostrar imagens existentes se disponíveis
+            if (peca.fotoPeca) {
+                const fotoPecaPreview = document.getElementById('foto-peca-preview');
+                const img = document.createElement('img');
+                img.src = peca.fotoPeca;
+                img.classList.add('image-preview');
+                fotoPecaPreview.innerHTML = ''; // Limpar o preview antigo
+                fotoPecaPreview.appendChild(img);
+            }
+
+            if (peca.desenhoPeca) {
+                const desenhoPecaPreview = document.getElementById('desenho-peca-preview');
+                const img = document.createElement('img');
+                img.src = peca.desenhoPeca;
+                img.classList.add('image-preview');
+                desenhoPecaPreview.innerHTML = ''; // Limpar o preview antigo
+                desenhoPecaPreview.appendChild(img);
+            }
+
+            document.getElementById('edit-piece-form').addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const formData = new FormData(this);
+
+                const updatedPeca = {
+                    codigo: formData.get('codigo'),
+                    tamanho: formData.get('tamanho'),
+                    material: formData.get('material'),
+                    outraInformacao: formData.get('outras-informacoes'),
+                    fotoPeca: peca.fotoPeca,  // Manter a imagem existente
+                    desenhoPeca: peca.desenhoPeca // Manter a imagem existente
+                };
+
+                const maquinas = JSON.parse(localStorage.getItem('maquinas')) || [];
+                const maquina = maquinas.find(maquina => maquina.pecas.some(peca => peca.codigo === codigoPeca));
+
+                if (maquina) {
+                    const index = maquina.pecas.findIndex(peca => peca.codigo === codigoPeca);
+                    maquina.pecas[index] = updatedPeca;
+                    localStorage.setItem('maquinas', JSON.stringify(maquinas));
+                    document.getElementById('message-container').innerHTML = '<p class="success-message">Alterações salvas.</p>';
+                } else {
+                    document.getElementById('message-container').innerHTML = '<p class="error-message">Peça não encontrada.</p>';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Máquina</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f4f4f4;
+            padding: 10px;
+        }
+
+        .back-button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 800px;
+            padding: 20px;
+            margin: 20px auto;
+        }
+
+        .container h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-group input[type="file"] {
+            padding: 5px;
+        }
+
+        .form-group button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+
+        .success-message {
+            display: none;
+            color: green;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 16px;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <a href="index.html" class="back-button">Voltar para a Página Inicial</a>
+    </div>
+
+    <div class="container">
+        <h1>Editar Máquina</h1>
+        <div id="error-message" class="error-message"></div>
+        <form id="edit-form">
+            <div class="form-group">
+                <label for="nomeAtual">Nome Atual da Máquina:</label>
+                <input type="text" id="nomeAtual" name="nomeAtual" required>
+            </div>
+            <div class="form-group">
+                <label for="novoNome">Novo Nome da Máquina:</label>
+                <input type="text" id="novoNome" name="novoNome">
+            </div>
+            <div class="form-group">
+                <label for="imagemNova">Imagem Nova:</label>
+                <input type="file" id="imagemNova" name="imagemNova" accept="image/*">
+            </div>
+            <div class="form-group">
+                <button type="button" onclick="editarMaquina()">Salvar Alterações</button>
+            </div>
+        </form>
+        <div id="success-message" class="success-message">Alterações salvas</div>
+    </div>
+
+    <script>
+        function editarMaquina() {
+            const nomeAtual = document.getElementById('nomeAtual').value.trim();
+            const novoNome = document.getElementById('novoNome').value.trim();
+            const imagemNova = document.getElementById('imagemNova').files[0];
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+
+            const maquinas = JSON.parse(localStorage.getItem('maquinas')) || [];
+            const maquinaIndex = maquinas.findIndex(maquina => maquina.nome === nomeAtual);
+
+            if (maquinaIndex === -1) {
+                errorMessage.textContent = 'Máquina não encontrada';
+                successMessage.style.display = 'none';
+                return;
+            }
+
+            errorMessage.textContent = '';
+            const maquina = maquinas[maquinaIndex];
+
+            if (novoNome) {
+                maquina.nome = novoNome;
+            }
+
+            if (imagemNova) {
+                const reader = new FileReader();
+                reader.onloadend = function () {
+                    maquina.fotoMaquina = reader.result;
+                    localStorage.setItem('maquinas', JSON.stringify(maquinas));
+                    successMessage.style.display = 'block';
+                };
+                reader.readAsDataURL(imagemNova);
+            } else {
+                localStorage.setItem('maquinas', JSON.stringify(maquinas));
+                successMessage.style.display = 'block';
+            }
+        }
+    </script>
+
+</body>
+</html>
+
+
+
+
+
+

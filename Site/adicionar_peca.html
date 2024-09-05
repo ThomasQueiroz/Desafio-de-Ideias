@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar Peça</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 800px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            min-width: 150px;
+            height: 50px;
+            border-radius: 4px;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 20px;
+            color: #007BFF;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-button">Voltar para a Página Inicial</a>
+
+    <div class="container">
+        <h1>Cadastro de Peça</h1>
+        <form id="adicionar-form">
+            <label for="codigo-maquina">Código da Máquina:</label>
+            <input type="text" id="codigo-maquina" name="codigo-maquina" required>
+
+            <label for="desenho-peca">Desenho da Peça:</label>
+            <input type="file" id="desenho-peca" name="desenho-peca">
+
+            <label for="foto-peca">Foto da Peça:</label>
+            <input type="file" id="foto-peca" name="foto-peca">
+
+            <label for="codigo">Código da Peça:</label>
+            <input type="text" id="codigo" name="codigo" required>
+
+            <label for="tamanho">Tamanho:</label>
+            <input type="text" id="tamanho" name="tamanho" required>
+
+            <label for="material">Material:</label>
+            <input type="text" id="material" name="material" required>
+
+            <label for="outra-informacao">Outras Informações:</label>
+            <input type="text" id="outra-informacao" name="outra-informacao" required>
+
+            <button type="submit" id="adicionar-button">Adicionar Peça</button>
+        </form>
+        <div id="message" class="message"></div>
+    </div>
+
+<script>
+document.getElementById('adicionar-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const codigoMaquina = document.getElementById('codigo-maquina').value;
+    const codigo = document.getElementById('codigo').value;
+    const tamanho = document.getElementById('tamanho').value;
+    const material = document.getElementById('material').value;
+    const outraInformacao = document.getElementById('outra-informacao').value;
+    const fotoPeca = document.getElementById('foto-peca').files[0];
+    const desenhoPeca = document.getElementById('desenho-peca').files[0];
+
+    if (codigoMaquina && codigo && tamanho && material && outraInformacao) {
+        let maquinas = JSON.parse(localStorage.getItem('maquinas')) || [];
+        const maquinaExistente = maquinas.find(maquina => maquina.nome === codigoMaquina);
+
+        if (maquinaExistente) {
+            const pecaExistente = maquinaExistente.pecas && maquinaExistente.pecas.find(peca => peca.codigo === codigo);
+
+            if (pecaExistente) {
+                document.getElementById('message').textContent = 'Já existe uma peça com este código para a máquina selecionada!';
+                return;
+            }
+
+            const readerFoto = new FileReader();
+            const readerDesenho = new FileReader();
+
+            readerFoto.onloadend = function () {
+                readerDesenho.onloadend = function () {
+                    const novaPeca = {
+                        codigo: codigo,
+                        tamanho: tamanho,
+                        material: material,
+                        outraInformacao: outraInformacao,
+                        fotoPeca: fotoPeca ? readerFoto.result : null,
+                        desenhoPeca: desenhoPeca ? readerDesenho.result : null // Armazena a URL do desenho
+                    };
+
+                    if (!maquinaExistente.pecas) {
+                        maquinaExistente.pecas = [];
+                    }
+
+                    maquinaExistente.pecas.push(novaPeca);
+                    localStorage.setItem('maquinas', JSON.stringify(maquinas));
+                    document.getElementById('message').textContent = 'Peça adicionada com sucesso!';
+                    document.getElementById('adicionar-form').reset();
+                };
+
+                if (desenhoPeca) {
+                    readerDesenho.readAsDataURL(desenhoPeca); // Ler o desenho se existir
+                } else {
+                    readerDesenho.onloadend(); // Prosseguir se não houver desenho
+                }
+            };
+
+            if (fotoPeca) {
+                readerFoto.readAsDataURL(fotoPeca); // Ler a foto
+            } else {
+                readerFoto.onloadend(); // Prosseguir se não houver foto
+            }
+        } else {
+            document.getElementById('message').textContent = 'Máquina não encontrada!';
+        }
+    } else {
+        document.getElementById('message').textContent = 'Preencha todos os campos obrigatórios!';
+    }
+});
+</script>
+
+
+</body>
+</html>
+
+
+
+
+
+
+

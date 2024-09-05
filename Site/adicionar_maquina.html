@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adicionar Máquina</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 800px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            min-width: 150px;
+            height: 50px;
+            border-radius: 4px;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 20px;
+            color: #007BFF;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-button">Voltar para a Página Inicial</a>
+
+    <div class="container">
+        <h1>Cadastro de Máquina</h1>
+        <form id="adicionar-form">
+            <label for="nome-maquina">Código da Máquina:</label>
+            <input type="text" id="nome-maquina" name="nome-maquina" required>
+
+            <label for="foto-maquina">Foto da Máquina:</label>
+            <input type="file" id="foto-maquina" name="foto-maquina">
+
+            <button type="submit" id="adicionar-button">Adicionar Máquina</button>
+        </form>
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+document.getElementById('adicionar-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    const codigoMaquina = document.getElementById('codigo-maquina').value;
+    const codigo = document.getElementById('codigo').value;
+    const tamanho = document.getElementById('tamanho').value;
+    const material = document.getElementById('material').value;
+    const outraInformacao = document.getElementById('outra-informacao').value;
+    const fotoPeca = document.getElementById('foto-peca').files[0];
+    const desenhoPeca = document.getElementById('desenho-peca').files[0];  // Novo: Capturar o desenho
+
+    if (codigoMaquina && codigo && tamanho && material && outraInformacao) {
+        let maquinas = JSON.parse(localStorage.getItem('maquinas')) || [];
+        const maquinaExistente = maquinas.find(maquina => maquina.nome === codigoMaquina);
+
+        if (maquinaExistente) {
+            const pecaExistente = maquinaExistente.pecas && maquinaExistente.pecas.find(peca => peca.codigo === codigo);
+
+            if (pecaExistente) {
+                document.getElementById('message').textContent = 'Já existe uma peça com este código para a máquina selecionada!';
+                return;
+            }
+
+            const readerFoto = new FileReader();
+            const readerDesenho = new FileReader();  // Novo: Para ler o desenho
+
+            readerFoto.onloadend = function () {
+                readerDesenho.onloadend = function () {  // Novo: Função para lidar com o desenho
+                    const novaPeca = {
+                        codigo: codigo,
+                        tamanho: tamanho,
+                        material: material,
+                        outraInformacao: outraInformacao,
+                        fotoPeca: fotoPeca ? readerFoto.result : null, // URL da foto
+                        desenhoPeca: desenhoPeca ? readerDesenho.result : null // Novo: URL do desenho
+                    };
+
+                    if (!maquinaExistente.pecas) {
+                        maquinaExistente.pecas = [];
+                    }
+
+                    maquinaExistente.pecas.push(novaPeca);
+                    localStorage.setItem('maquinas', JSON.stringify(maquinas));
+                    document.getElementById('message').textContent = 'Peça adicionada com sucesso!';
+                    document.getElementById('adicionar-form').reset();
+                };
+
+                if (desenhoPeca) {
+                    readerDesenho.readAsDataURL(desenhoPeca);  // Novo: Ler o desenho
+                } else {
+                    readerDesenho.onloadend();  // Caso não tenha desenho, prossegue
+                }
+            };
+
+            if (fotoPeca) {
+                readerFoto.readAsDataURL(fotoPeca);
+            } else {
+                readerFoto.onloadend();  // Caso não tenha imagem, apenas prossegue com o processo
+            }
+        } else {
+            document.getElementById('message').textContent = 'Máquina não encontrada!';
+        }
+    } else {
+        document.getElementById('message').textContent = 'Preencha todos os campos obrigatórios!';
+    }
+});
+    </script>
+
+</body>
+</html>
